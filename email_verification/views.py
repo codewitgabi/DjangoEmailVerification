@@ -21,12 +21,15 @@ class SignupForm(UserCreationForm):
 		model = User
 		fields = ["username", "email", "password1", "password2"]
 		
+		
 def sendMail(form):
 	subject = "Verify Your Email"
 	user = form.save(commit=False)
 	email = user.email
+	user.is_active = False
+	user.save()
 	
-	token = Token.objects.create()
+	token = Token.objects.create(user=user)
 	token.save()
 	
 	html_content = render_to_string("mail.html", {"token": token})
@@ -40,10 +43,9 @@ def sendMail(form):
 	mail.content_subtype = "html"
 	mail.fail_silently = False
 	mail.send()
-	
-	user.is_active = False
-	user.save()
+
 	return user
+
 
 def register(request):
 	t = Token.objects.all().last()
@@ -59,7 +61,10 @@ def register(request):
 def pre_login(request, token):
 	t = Token.objects.get(id=token)
 	if not t.has_expired:
-		return HttpResponse("<a>Login</a> to continue")
-	return HttpResponse("Token has expired")
+		user = t.user
+		user.is_active = True
+		user.save()
+		return render(request, "pre-login-success.html")
+	return render(request, "pre-login-failure.html")
 	
 	
