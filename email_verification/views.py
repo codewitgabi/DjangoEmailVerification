@@ -2,11 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from django import forms
-from django.core.mail import EmailMultiAlternatives, EmailMessage
+from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from .models import Token
-from django.http import HttpResponse
 
 User = get_user_model()
 
