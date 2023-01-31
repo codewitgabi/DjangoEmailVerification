@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "email_verification.apps.EmailVerificationConfig",
+    "testapp.apps.TestappConfig",
 ]
 
 MIDDLEWARE = [
