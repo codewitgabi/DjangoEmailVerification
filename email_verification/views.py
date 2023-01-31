@@ -6,6 +6,13 @@ from .models import Token
 
 		
 def VerifyEmail(request, form):
+	"""
+	request:
+		holds the request content sent to this view.
+	form:
+		this parameter holds the register form data when the register form is submitted.
+	rtype: instance of the created user
+	"""
 	subject = "Verify Your Email"
 	user = form.save(commit=False)
 	email = user.email
@@ -15,8 +22,7 @@ def VerifyEmail(request, form):
 	token = Token.objects.create(user=user)
 	token.save()
 	
-	html_content = render_to_string("email_verification/mail.html",
-		{"token": token}, request=request)
+	html_content = render_to_string("email_verification/mail.html", {"token": token}, request=request)
 
 	mail = EmailMessage(
 		subject,
@@ -32,17 +38,24 @@ def VerifyEmail(request, form):
 
 
 def pre_login(request, token):
-	token = get_object_or_404(Token, id=token)
-	if not token.has_expired:
-		user = token.user
-		user.is_active = True
-		user.save()
+	"""
+	token:
+		user verification token unique to every user.
+	"""
+	try:
+		token = get_object_or_404(Token, id=token)
+		if not token.has_expired:
+			user = token.user
+			user.is_active = True
+			user.save()
+			return render(
+				request,
+				"email_verification/pre-login-success.html",
+				{"login_url": settings.LOGIN_URL}
+			)
 		return render(
-			request,
-			"email_verification/pre-login-success.html",
-			{"login_url": settings.LOGIN_URL}
-		)
-	return render(
-		request, "email_verification/pre-login-failure.html")
+			request, "email_verification/pre-login-failure.html")
+	except:
+		pass
 	
 	
