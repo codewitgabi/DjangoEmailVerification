@@ -1,9 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from django import forms
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+from django.conf import settings
 from .models import Token
 
 User = get_user_model()
@@ -20,7 +21,7 @@ class SignupForm(UserCreationForm):
 		fields = ["username", "email", "password1", "password2"]
 		
 		
-def sendMail(form):
+def sendMail(request, form):
 	subject = "Verify Your Email"
 	user = form.save(commit=False)
 	email = user.email
@@ -30,7 +31,8 @@ def sendMail(form):
 	token = Token.objects.create(user=user)
 	token.save()
 	
-	html_content = render_to_string("mail.html", {"token": token})
+	html_content = render_to_string("mail.html",
+		{"token": token}, request=request)
 
 	mail = EmailMessage(
 		subject,
@@ -51,18 +53,18 @@ def register(request):
 	if request.method == "POST":
 		form = SignupForm(request.POST)
 		if form.is_valid():
-			sendMail(form)
+			sendMail(request, form)
 			return redirect("verify_email:register")
 	return render(request, "signup.html", {"form": form, "token": t})
 	
 
 def pre_login(request, token):
-	t = Token.objects.get(id=token)
-	if not t.has_expired:
-		user = t.user
+	token = get_object_or_404(Token, id=token)
+	if not token.has_expired:
+		user = token.user
 		user.is_active = True
 		user.save()
-		return render(request, "pre-login-success.html")
+		return render(request, "pre-login-success.html", {"login_url": settings.LOGIN_URL})
 	return render(request, "pre-login-failure.html")
 	
 	
