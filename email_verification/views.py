@@ -42,20 +42,16 @@ def pre_login(request, token):
 	token:
 		user verification token unique to every user.
 	"""
-	try:
-		token = get_object_or_404(Token, id=token)
-		if not token.has_expired:
-			user = token.user
-			user.is_active = True
-			user.save()
-			return render(
-				request,
-				"email_verification/pre-login-success.html",
-				{"login_url": settings.LOGIN_URL}
-			)
+	token = get_object_or_404(Token, id=token)
+	if not token.has_expired:
+		user = token.user
+		user.is_active = True
+		user.save()
 		return render(
-			request, "email_verification/pre-login-failure.html")
-	except:
-		pass
-	
-	
+			request,
+			"email_verification/pre-login-success.html",
+			{"login_url": settings.LOGIN_URL}
+		)
+	return render(
+		request, "email_verification/pre-login-failure.html")
+
