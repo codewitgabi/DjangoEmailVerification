@@ -3,8 +3,37 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
 from .models import Token
+from django.db import transaction
+from django.contrib.auth import get_user_model
+from django.utils.timesince import timesince
+import sys
 
-		
+User = get_user_model()
+
+def delete_inactive_users():
+	"""
+	Delete inactive users after 24 hours.
+	"""
+	
+	allowed_times = [
+		"day", "days",
+		"week", "weeks",
+		"month", "months",
+	]
+	
+	while True:
+		# get users with is_active as False
+		inactive_users = User.objects.filter(is_active=False)
+			
+		for user in inactive_users:
+			user_date_joined =timesince(user.date_joined).split(", ")[0].split()[-1]
+			
+			if user_date_joined in allowed_times:
+				sys.stdout.write(f"[INFO] Deleted <User: {user.id}>....\n")
+				user.delete()
+				
+
+@transaction.atomic(durable=True, savepoint=False)
 def VerifyEmail(request, form):
 	"""
 	request:
@@ -37,6 +66,7 @@ def VerifyEmail(request, form):
 	return user
 
 
+@transaction.atomic(durable=True, savepoint=False)
 def pre_login(request, token):
 	"""
 	token:
