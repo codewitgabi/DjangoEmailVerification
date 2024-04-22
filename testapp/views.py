@@ -1,8 +1,7 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from django import forms
-from email_verification.views import VerifyEmail
+from email_verification.views import verify_email
 
 User = get_user_model()
 
@@ -23,7 +22,7 @@ def register(request):
 	if request.method == "POST":
 		form = SignupForm(request.POST)
 		if form.is_valid():
-			VerifyEmail(request, form)
+			verify_email(request, form)
 	return render(request, "testapp/signup.html", {"form": form})
 	
 	
